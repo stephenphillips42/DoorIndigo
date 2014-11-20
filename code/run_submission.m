@@ -16,7 +16,19 @@ initialize_additional_features;
 %% Run algorithm
 % Example by lazy TAs
 N = size(X_test,1);
-prices = zeros(N,1);
+[N,npcs]=size(Z);
+tic
+lambda = 1;
+AtA = Z'*Z;
+size(AtA)
+Atb = Z'*Y_train;
+size(Atb)
+w_pca = AtA \ Atb;
+size(w_pca)
+clear AtA b;
+toc
+%%
+prices = full((X_test*V)*w_pca);
 
 %% Save results to a text file for submission
 dlmwrite('submit.txt',prices,'precision','%d');

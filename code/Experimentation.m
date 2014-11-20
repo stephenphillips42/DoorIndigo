@@ -8,6 +8,7 @@ load ../data/bigram_test.mat
 load ../data/price_train.mat
 
 X_train =[city_train word_train bigram_train];
+[N,p] = size(X_train);
 Y_train = price_train;
 X_test = [city_test word_test bigram_test];
 Y_city = cell2mat(cellfun(@(x) find(x,1,'first'), num2cell(city_train,2),'UniformOutput',false));
@@ -83,16 +84,15 @@ end
 fprintf('Optimal Lambda at 100\n')
 
 %% PCA attempt
-
-X = [word_train bigram_train];
 npcs = 200;
 tic
-[U,S,C]=svds(X,npcs);
+[U,S,V]=svds(X_train,npcs);
 Z = U*S;
 toc
 
 %%
 % PCR
+[N,npcs]=size(Z);
 tic
 lambda = 1;
 AtA = Z'*Z;
@@ -101,10 +101,6 @@ w_pca = AtA \ Atb;
 clear AtA b;
 toc
 Yhat = Z*w_pca;
-figure
-plot(Y_train,Y_train-Yhat,'r.')
-hold on
-plot(Y_train,zeros(size(Y_train)),'b--')
 
 err_pca = sqrt(sum((Y_train-Yhat).^2)/N);
 fprintf('Error: %f\n',err_pca);
@@ -125,7 +121,7 @@ for k = 1:K
     clear AtA Atb
     toc
     Yhat = Z(test,:)*w;
-    err_pca(k) = norm(Yhat - Y_train(test))/N;
+    err_pca(k) = norm(Yhat - Y_train(test))/length(Y_train(test));
     plot(Y_train(test),Y_train(test)-Yhat,'.','color',cc(k,:))
     hold on
     plot(Y_train(test),zeros(size(Y_train(test))),'k.')
@@ -169,25 +165,12 @@ end
 %%
 figure
 hold on
-plot3(Z((Y_train > miny & Y_train < maxy),1),Z((Y_train > miny & Y_train < maxy),5),Z((Y_train > miny & Y_train < maxy),6),'r.')
-plot3(Z((Y_train > maxy),1),Z((Y_train > maxy),5),Z((Y_train > maxy),6),'g.')
-plot3(Z((Y_train < miny),1),Z((Y_train < miny),5),Z((Y_train < miny),6),'b.');
-
-%%
-figure
-plot3(Z((Y_city==1),1),Z((Y_city==1),5),Z((Y_city==1),6),'b.'); hold on
-plot3(Z((Y_city==2),1),Z((Y_city==2),5),Z((Y_city==2),6),'r.')
-plot3(Z((Y_city==3),1),Z((Y_city==3),5),Z((Y_city==3),6),'g.')
-plot3(Z((Y_city==4),1),Z((Y_city==4),5),Z((Y_city==4),6),'m.')
-plot3(Z((Y_city==5),1),Z((Y_city==5),5),Z((Y_city==5),6),'k.')
-% 
-% figure
-% plot(Z((Y_city==1),1),Z((Y_city==1),2),'b.'); hold on
-% plot(Z((Y_city==2),1),Z((Y_city==2),2),'r.')
-% plot(Z((Y_city==3),1),Z((Y_city==3),2),'g.')
-% plot(Z((Y_city==4),1),Z((Y_city==4),2),'m.')
-% plot(Z((Y_city==5),1),Z((Y_city==5),2),'k.')
-
+miny = 12;
+maxy = 13.566;
+dimens = [ 2 3 4 ];
+plot3(Z((Y_train > miny & Y_train < maxy),2),Z((Y_train > miny & Y_train < maxy),3),Z((Y_train > miny & Y_train < maxy),4),'r.')
+plot3(Z((Y_train > maxy),2),Z((Y_train > maxy),3),Z((Y_train > maxy),4),'g.')
+plot3(Z((Y_train < miny),2),Z((Y_train < miny),3),Z((Y_train < miny),4),'b.');
 
 %% GMM
 

@@ -167,11 +167,29 @@ figure
 hold on
 miny = 12;
 maxy = 13.566;
-dimens = [ 2 3 4 ];
-plot3(Z((Y_train > miny & Y_train < maxy),2),Z((Y_train > miny & Y_train < maxy),3),Z((Y_train > miny & Y_train < maxy),4),'r.')
-plot3(Z((Y_train > maxy),2),Z((Y_train > maxy),3),Z((Y_train > maxy),4),'g.')
-plot3(Z((Y_train < miny),2),Z((Y_train < miny),3),Z((Y_train < miny),4),'b.');
+dimens = [ 1 6 6 ];
+plot3(Z((Y_train > miny & Y_train < maxy),dimens(1)),Z((Y_train > miny & Y_train < maxy),dimens(2)),Z((Y_train > miny & Y_train < maxy),dimens(3)),'b.')
+plot3(Z((Y_train > maxy),dimens(1)),Z((Y_train > maxy),dimens(2)),Z((Y_train > maxy),dimens(3)),'g.')
+plot3(Z((Y_train < miny),dimens(1)),Z((Y_train < miny),dimens(2)),Z((Y_train < miny),dimens(3)),'r.');
 
 %% GMM
+% gobj = fitgmdist(Z_all,1);
+% gobj2 = fitgmdist(Z_all,2);
+% gobj3 = fitgmdist(Z_all,3);
+%idx = cluster(gobj2,Z);
+
+figure
+hold on
+miny = 12;
+maxy = 13.566;
+dimens = [ 2 3 4 ];
+plot3(Z((idx==1),dimens(1)),Z((idx==1),dimens(2)),Z((idx==1),dimens(3)),'b.')
+plot3(Z((idx==2),dimens(1)),Z((idx==2),dimens(2)),Z((idx==2),dimens(3)),'r.');
+% plot3(Z((idx==3),dimens(1)),Z((idx==3),dimens(2)),Z((idx==3),dimens(3)),'g.');
+% Conclusion: Not very helpful
+
+%%
+
+
 
 

@@ -27,7 +27,6 @@ w_pca = AtA \ Atb;
 size(w_pca)
 clear AtA b;
 toc
-%%
 prices = full((X_test*V)*w_pca);
 
 %% Save results to a text file for submission

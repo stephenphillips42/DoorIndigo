@@ -9,11 +9,11 @@ X_test_additional_features = []; % Modify this in if needed
 
 
 npcs = 200;
-fprintf('PCA computation ...')
+fprintf('PCA computation ...\n')
 tic
 [U,S,V]=svds([X_train; X_test],npcs);
-Z = U*S;
-Z = Z(1:size(X_train,1),:);
+Z_all = U*S;
+Z = Z_all(1:size(X_train,1),:);
 toc
 
 

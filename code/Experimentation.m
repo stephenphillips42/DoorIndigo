@@ -17,13 +17,18 @@ initialize_additional_features;
 
 
 %% Cross validation of lambdas
-X = [word_train bigram_train];
+X = [Z word_train bigram_train];
 K = 10; % Number of cross validations
 Ind = crossvalind('Kfold',N,K);
-Lambdas = [80 90 100 200 500];
+Lambdas = [0.1 10 50 80];
 err_raw = zeros(length(Lambdas),K);
 
+% Optimal lambda is 70 for simple ridge regression (just words and bigrams)
+% Optimal lambda for extended ridge (using PCA as well) is 0.1 (zero makes
+%   it crash??)
+
 for l = 1:length(Lambdas)
+    disp(Lambdas(l))
     figure
     cc = hsv(K);
     for k = 1:K
@@ -38,7 +43,7 @@ for l = 1:length(Lambdas)
         clear AtA Atb
         toc
         Yhat = X(test,:)*w;
-        err_raw(l,k) = norm(Yhat - Y_train(test))/N;
+        err_raw(l,k) = norm(Yhat - Y_train(test))/length(Y_train(test));
         plot(Y_train(test),Y_train(test)-Yhat,'.','color',cc(k,:))
         hold on
         plot(Y_train(test),zeros(size(Y_train(test))),'k.')
@@ -153,7 +158,108 @@ plot3(Z((idx==2),dimens(1)),Z((idx==2),dimens(2)),Z((idx==2),dimens(3)),'r.');
 % plot3(Z((idx==3),dimens(1)),Z((idx==3),dimens(2)),Z((idx==3),dimens(3)),'g.');
 % Conclusion: Not very helpful
 
+%% Decision trees
+
+leafs = linspace(150,300,10);
+
+% Optimal leaf structure not clear... around 215
+
+rng('default');
+N = numel(leafs);
+err = zeros(N,1);
+for n=1:N
+    disp(leafs(n))
+    t = fitctree(Z,(Y_train<prctile(Y_train,75)),'CrossVal','On',...
+        'MinLeaf',leafs(n));
+    err(n) = kfoldLoss(t);
+end
+plot(leafs,err);
+xlabel('Min Leaf Size');
+ylabel('cross-validated error');
+
+
 %%
+X = [Z word_train bigram_train];
+K = 6; % Number of cross validations
+Ind = crossvalind('Kfold',size(X,1),K);
+Lambdas = [0.1];
+
+for l = 1:length(Lambdas)
+    disp(Lambdas(l))
+    figure
+    cc = hsv(K);
+    for k = 1:K
+        test = (Ind == k); train = ~test;
+        t25 = fitctree(Z(train,:),...
+                        (Y_train(train)<prctile(Y_train(train),25)),...
+                        'MinLeaf',215);
+        t75 = fitctree(Z(train,:),...
+                        (Y_train(train)<prctile(Y_train(train),75)),...
+                        'MinLeaf',215);
+        Xtmp = X(train,:);
+        Ytmp = Y_train(train);
+        Y25 = predict(t25,Z(train,:));
+        Y75 = predict(t75,Z(train,:));
+        % Group 1 in 0-25% range
+        tic
+        disp('Group 1 - <25')
+        Atb = Xtmp(Y25,:)'*Ytmp(Y25);
+        AtA = (Xtmp(Y25,:)'*Xtmp(Y25,:));
+        for i = 1:size(AtA,1)
+            AtA(i,i) = AtA(i,i)+Lambdas(l);
+        end
+        w25 = AtA \ Atb;
+        clear AtA Atb
+        toc
+        % Group 2 in 25-75% range
+        disp('Group 2 - 25-75')
+        tic
+        Atb = Xtmp(~Y25 & Y75,:)'*Ytmp(~Y25 & Y75);
+        AtA = (Xtmp(~Y25 & Y75,:)'*Xtmp(~Y25 & Y75,:));
+        for i = 1:size(AtA,1)
+            AtA(i,i) = AtA(i,i)+Lambdas(l);
+        end
+        wmid = AtA \ Atb;
+        clear AtA Atb
+        toc
+        % Group 3 in 75-100% range (minus some mis-classifications)
+        disp('Group 3 - >75')
+        tic
+        Atb = Xtmp(~Y25 & ~Y75,:)'*Ytmp(~Y25 & ~Y75);
+        AtA = (Xtmp(~Y25 & ~Y75,:)'*Xtmp(~Y25 & ~Y75,:));
+        for i = 1:size(AtA,1)
+            AtA(i,i) = AtA(i,i)+Lambdas(l);
+        end
+        w75 = AtA \ Atb;
+        clear AtA Atb
+        toc
+        clear Xtmp Ytmp
+
+        % Predictions
+        Yhat = zeros(size(Y_train(test)));
+        % tree predictions
+        Ytest25 = predict(t25,Z(test,:));
+        Ytest75 = predict(t75,Z(test,:));
+        % Regression from trees
+        Xtmp_test = X(test,:);
+        disp('Testing <25')
+        Yhat(Ytest25) = Xtmp_test(Ytest25,:)*w25;
+        disp('Testing 25-75')
+        Yhat(~Ytest25 & Ytest75) = Xtmp_test(~Ytest25 & Ytest75,:)*wmid;
+        disp('Testing >75')
+        Yhat(~Ytest25 & ~Ytest75) = Xtmp_test(~Ytest25 & ~Ytest75,:)*w75;
+        
+        clear Ytest25 Ytest75 Xtmp_test
+        
+        % Record results
+        err_raw(l,k) = norm(Yhat - Y_train(test))/length(Y_train(test));
+        plot(Y_train(test),Y_train(test)-Yhat,'.','color',cc(k,:))
+        hold on
+        plot(Y_train(test),zeros(size(Y_train(test))),'k.')
+    end
+    title(sprintf('Lambda = %f',Lambdas(l)))
+end
+
 
 
 

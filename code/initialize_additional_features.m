@@ -14,6 +14,8 @@ tic
 [U,S,V]=svds([X_train; X_test],npcs);
 Z_all = U*S;
 Z = Z_all(1:size(X_train,1),:);
+Z_test = Z_all((1+size(X_train,1)):end,:);
+
 toc
 
 

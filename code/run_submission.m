@@ -29,7 +29,7 @@ initialize_additional_features;
 % clear AtA Atb;
 % toc
 %%
-X = [Z word_train bigram_train];
+X = [Z];
 w_lasso = lasso(X,Y_train,'Options','UseParallel');
 
 %%

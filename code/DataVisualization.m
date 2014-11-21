@@ -1,11 +1,11 @@
 %% Data visualization
 %% Plot by city (first 3 dimentions)
 figure
-plot3(Z((Y_city==1),1),Z((Y_city==1),2),Z((Y_city==1),3),'b.'); hold on
-plot3(Z((Y_city==2),1),Z((Y_city==2),2),Z((Y_city==2),3),'r.')
-plot3(Z((Y_city==3),1),Z((Y_city==3),2),Z((Y_city==3),3),'g.')
-plot3(Z((Y_city==4),1),Z((Y_city==4),2),Z((Y_city==4),3),'m.')
-plot3(Z((Y_city==5),1),Z((Y_city==5),2),Z((Y_city==5),3),'k.')
+plot3(Z((Y_city==1),1),Z((Y_city==1),2),Y_train((Y_city==1)),'b.'); hold on
+plot3(Z((Y_city==2),1),Z((Y_city==2),2),Y_train((Y_city==2)),'r.')
+plot3(Z((Y_city==3),1),Z((Y_city==3),2),Y_train((Y_city==3)),'g.')
+plot3(Z((Y_city==4),1),Z((Y_city==4),2),Y_train((Y_city==4)),'m.')
+plot3(Z((Y_city==5),1),Z((Y_city==5),2),Y_train((Y_city==5)),'k.')
 %%
 figure
 hold on

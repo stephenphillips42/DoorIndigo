@@ -17,14 +17,15 @@ initialize_additional_features;
 
 
 %% Kmeans
-X = [Z word_train bigram_train];
+X = [Z];
 Idx = kmeans(X,30);
 
 
 %% Cross validation of Experiment (template)
+X=[Z word_train];
 K = 10; % Number of cross validations
 Ind = crossvalind('Kfold',N,K);
-Lambdas = [0.1 10 50 80]; % Different regularization parameters we choose
+Lambdas = [0.1]; % Different regularization parameters we choose
 err_raw = zeros(length(Lambdas),K);
 
 % Optimal lambda for simple ridge regression (just words and bigrams) is 70
@@ -37,7 +38,7 @@ for l = 1:length(Lambdas)
     cc = hsv(K);
     for k = 1:K
         test = (Ind == k); train = ~test;
-        tic
+        tic % Regression
         Atb = X(train,:)'*Y_train(train,:);
         AtA = (X(train,:)'*X(train,:));
         for i = 1:size(AtA,1)
@@ -52,7 +53,7 @@ for l = 1:length(Lambdas)
         hold on
         plot(Y_train(test),zeros(size(Y_train(test))),'k.')
     end
-    title(sprintf('Lambda = %f',Lambdas(l)))
+    title(sprintf('Y error vs Y. Lambda = %f',Lambdas(l)))
 end
 
 %fprintf('Optimal Lambda at 100\n')

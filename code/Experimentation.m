@@ -16,9 +16,6 @@ Y_city = cell2mat(cellfun(@(x) find(x,1,'first'), num2cell(city_train,2),'Unifor
 initialize_additional_features;
 
 
-%% Kmeans
-X = [Z];
-Idx = kmeans(X,30);
 
 
 %% Cross validation of Experiment (template)

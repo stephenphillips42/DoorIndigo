@@ -1,0 +1,39 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+
+%opening
+\title{Machine Learning Project Description}
+\author{Peter Ballen and Stephen Phillips}
+
+\begin{document}
+\maketitle
+
+\section{Prinicpal Component Regression}
+\subsubsection*{Semi-supervised Dimentionality Reduction}
+We first get the first 1000 Principal components on the data using svds from MATLAB.
+Then we run MATLAB's built in LASSO ($L_1$ regularization of linear regression) on the result. We used this to beat the first baseline. 
+
+To run the code, simply specify what the Y\_test should be and it will output the error. (Commented in the code)
+
+\section{K-Means as centers of Radial Basis Functions}
+\subsubsection*{Generative Method}
+We again use pricipal components, so first get the first 500 Principal components same as above, only with less pricipal components.
+Then we run MATLAB's built in k-means algorithm on the training data, finding 200 clusters. We then use them as the centers of
+Radial Basis Functions, and add them in as new features. This is a generative model because the k-means is generative, we just
+soften it for the regression. We again use LASSO on the PCA and k-means features.
+
+To run the code, simply specify what the Y\_test should be and it will output the error. (Commented in the code)
+
+\section{SVM to separate data}
+\subsubsection*{Discriminative Method}
+Once again we get the first 500 Principal components. Then we train an SVM to spit the data in half, the ones with Y above the mean and the
+others with Y below the mean. We use MATLAB's built in svm classifier to do this. Then we train regressions (LASSO) on each half of that training data.
+Then we use the SVM to predict which half each point of the testing data should be on and predict with the appropriate weights. 
+
+To run the code, simply specify what the Y\_test should be and it will output the error. (Commented in the code)
+
+\section{Kernel Regression}
+\subsubsection*{Instance Based Method}
+
+
+\end{document}

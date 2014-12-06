@@ -17,10 +17,9 @@ Z = U*S;
 
 % LASSO
 tic
-[w, Fitinfo] = lasso(Z,Y,'Lambda',0.001);
+[w, Fitinfo] = lasso(Z(1:size(word_test,1),:),Y,'Lambda',0.001);
 toc
 
-%
 b = Fitinfo.Intercept(1);
 
 Ztest = [word_test bigram_test] * V;

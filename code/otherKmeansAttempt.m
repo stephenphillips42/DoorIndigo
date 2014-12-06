@@ -15,17 +15,17 @@ Y_train = price_train;
 X_test = [city_test word_test bigram_test];
 Y_city = cell2mat(cellfun(@(x) find(x,1,'first'), num2cell(city_train,2),'UniformOutput',false));
 
-load('pcaV.mat','V');
-Z = [word_train bigram_train] * V;
-Ztest = [word_test bigram_test] * V;
+load('pcaV500.mat','VV');
+Z = [word_train bigram_train] * VV;
+Ztest = [word_test bigram_test] * VV;
 Zall = [Z;Ztest];
 
 K = 200; % Number of clusters
-loading = false;
+loading = true;
 
 %% Rerun kmeans
 if loading
-    load('kmeansStuff100_small.mat')
+    load('kmeansStuff200_small.mat')
 else
     tic
     clusterIds = kmeans(Zall,K);
@@ -33,45 +33,20 @@ else
 end
 
 %%
+[trainind, testind] = crossvalind('HoldOut', length(Y_train), 0.5);
+
 clusterMeans = zeros(K,size(Z,2));
 clusterPrices = zeros(K,1);
 for i = 1:K
     clusterMeans(i,:) = mean(Z(clusterIds==i,:));
     clusterPrices(i) = mean(Y_train(clusterIds==i));
 end
-save('kmeansStuff200.mat','clusterIds');
+%save('kmeansStuff200.mat','clusterIds');
 
 %
 % figure;
 % plot3(clusterMeans(:,1),clusterMeans(:,2),clusterPrices,'r.');
 
-%%
-K = 2000;
-figure; hold on
-plotpc1=1;
-plotpc2=2;
-plotpc3=500;
-cc = hsv(K);
-clusterStats = zeros(K,3);
-for i = [1 247]
-    clusterStats(i,:) = [ sum(clusterIds==i) mean(Y(clusterIds==i)) range(Y(clusterIds==i)) ];
-    %fprintf('Cluster %d, with %d members, mean: %f, range %f\n',...
-    %    i,clusterStats(i,1),clusterStats(i,2),clusterStats(i,3))
-    scatter3(Z(clusterIds==i,plotpc1),...
-          Z(clusterIds==i,plotpc2),...
-          Z(clusterIds==i,plotpc3),...
-          (Y(clusterIds==i)).^11/10000000000,...
-          100*(Y(clusterIds==i)),...
-          '.');
-    % plot3(Z(clusterIds==i,plotpc1),Z(clusterIds==i,plotpc2),Z(clusterIds==i,plotpc3),'.','color',cc(i,:));
-    hold on
-end
-% colormap('gray')
-colorbar
-xlabel('Principal Components')
-ylabel('Price')
-hold off
-pause(3)
 
 %% Radial basis functions with the means
 % Compute the feature vectors
@@ -82,16 +57,6 @@ for i = 1:K
 end
 
 %% Create training and testing sets
-
-% [trainind, testind] = crossvalind('HoldOut', length(Y_train), 0.5);
-
-% X = [city_train Z rbf_train];
-X = [rbf_train(trainind,:)];
-Xtest = [rbf_train(testind,:)];
-Y = Y_train;
-% Ytest = Y_train(testind);
-% clusterIdsTrain = clusterIds(trainind);
-% clusterIdsTest = clusterIds(testind);
 
 %% LASSO :D
 % if loading
@@ -120,3 +85,30 @@ Yhat = Xtest*Slope0 + Intercept0;
 dlmwrite('submit.txt',Yhat,'precision','%d');
 
 
+%%
+K = 2000;
+figure; hold on
+plotpc1=1;
+plotpc2=2;
+plotpc3=500;
+cc = hsv(K);
+clusterStats = zeros(K,3);
+for i = [1 247]
+    clusterStats(i,:) = [ sum(clusterIds==i) mean(Y(clusterIds==i)) range(Y(clusterIds==i)) ];
+    %fprintf('Cluster %d, with %d members, mean: %f, range %f\n',...
+    %    i,clusterStats(i,1),clusterStats(i,2),clusterStats(i,3))
+    scatter3(Z(clusterIds==i,plotpc1),...
+          Z(clusterIds==i,plotpc2),...
+          Z(clusterIds==i,plotpc3),...
+          (Y(clusterIds==i)).^11/10000000000,...
+          100*(Y(clusterIds==i)),...
+          '.');
+    % plot3(Z(clusterIds==i,plotpc1),Z(clusterIds==i,plotpc2),Z(clusterIds==i,plotpc3),'.','color',cc(i,:));
+    hold on
+end
+% colormap('gray')
+colorbar
+xlabel('Principal Components')
+ylabel('Price')
+hold off
+pause(3)

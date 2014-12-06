@@ -55,6 +55,26 @@ end
 
 %fprintf('Optimal Lambda at 100\n')
 
+%% SVM for large ones (too large to save)
+[trainind, testind] = crossvalind('HoldOut', length(Y_train), 0.5);
+
+bigLabels = zeros(size(Y_train));
+bigLabels(Y_train > 15) = 2;
+bigLabels(bigLabels ~= 2) = 1;
+
+bigLabels_train = bigLabels(trainind);
+bigLabels_test = bigLabels(testind);
+X = Z(trainind,1:500);
+Xtest = Z(testind,1:500);
+
+tic
+bigSvm = svmtrain(X,bigLabels_train,'kernel_function','rbf','rbf_sigma',10);
+toc
+
+bigLabelHat = svmclassify(bigSvm,Xtest);
+
+fprintf('Classification error by small SVM: %f%%\n',100*sum(bigLabelHat ~= bigLabels_test)/length(bigLabels_test));
+
 %% SVM Training
 [trainind, testind] = crossvalind('HoldOut', length(Y_train), 0.5);
 
@@ -62,34 +82,24 @@ end
 smallLabels = zeros(size(Y_train));
 smallLabels(Y_train < 10) = 1;
 smallLabels(smallLabels ~= 1) = 2;
-bigLabels = zeros(size(Y_train));
-bigLabels(Y_train > 15) = 2;
-bigLabels(bigLabels ~= 2) = 1;
 
 smallLabels_train = smallLabels(trainind);
 smallLabels_test = smallLabels(testind);
-bigLabels_train = bigLabels(trainind);
-bigLabels_test = bigLabels(testind);
 X = Z(trainind,1:500);
 Xtest = Z(testind,1:500);
 tic
 smallSvm = svmtrain(X,smallLabels_train,'kernel_function','rbf','rbf_sigma',10);
 toc
-tic
-bigSvm = svmtrain(X,bigLabels_train,'kernel_function','rbf','rbf_sigma',10);
-toc
 smallLabelHat = svmclassify(smallSvm,Xtest);
-bigLabelHat = svmclassify(bigSvm,Xtest);
 
 fprintf('Classification error by small SVM: %f%%\n',100*sum(smallLabelHat ~= smallLabels_test)/length(smallLabels_test));
-fprintf('Classification error by small SVM: %f%%\n',100*sum(bigLabelHat ~= bigLabels_test)/length(bigLabels_test));
-
 
 %% Create training and testing sets
 
-[trainind, testind] = crossvalind('HoldOut', length(Y_train), 0.5);
+%[trainind, testind] = crossvalind('HoldOut', length(Y_train), 0.5);
+trainind = 1:length(Y_train);
 Y = Y_train(trainind);
-Ytest = Y_train(testind);
+% Ytest = Y_train(testind);
 
 % Compute the feature vectors
 tic
@@ -100,51 +110,45 @@ for i = 1:K
 end
 
 smallLabelTrain = svmclassify(smallSvm,Z(trainind,1:500));
-smallLabelTest = svmclassify(smallSvm,Z(testind,1:500));
+% smallLabelTest = svmclassify(smallSvm,Z(testind,1:500));
 smallLabelTrain = 2*(smallLabelTrain-1.5);
-smallLabelTest = 2*(smallLabelTest-1.5);
-
-bigLabelTrain = svmclassify(bigSvm,Z(trainind,1:500));
-bigLabelTest = svmclassify(bigSvm,Z(testind,1:500));
-bigLabelTrain = 2*(bigLabelTrain-1.5);
-bigLabelTest = 2*(bigLabelTest-1.5);
-
+% smallLabelTest = 2*(smallLabelTest-1.5);
 
 npcs=500;
 interinds = 1:20;
 interterms = [ (interinds)' (interinds)'; nchoosek(interinds,2) ];
 Zinter = Z(:,interterms(:,1)) .* Z(:,interterms(:,2));
 Ztrain = Z(trainind,1:npcs);
-Ztest = Z(testind,1:npcs);
+% Ztest = Z(testind,1:npcs);
 Zintertrain = Zinter(trainind,:);
-Zintertest = Zinter(testind,:);
-X = [city_train(trainind,:) ...
+% Zintertest = Zinter(testind,:);
+X = full([...
+     city_train(trainind,:) ...
      Ztrain ...
      Zintertrain ...
      rbf_train(trainind,:) ...
      word_train(trainind,wordsel(1:300)) ...
      bigram_train(trainind,bigramsel(1:200)) ...
-     smallLabelTrain ...
-     bigLabelTrain];
-Xtest = [city_train(testind,:) ...
-         Ztest ...
-         Zintertest ...
-         rbf_train(testind,:) ...
-         word_train(testind,wordsel(1:300)) ...
-         bigram_train(testind,bigramsel(1:200)) ...
-         smallLabelTest ...
-         bigLabelTest];
+     smallLabelTrain ]);
+% Xtest = full([...
+%          city_train(testind,:) ...
+%          Ztest ...
+%          Zintertest ...
+%          rbf_train(testind,:) ...
+%          word_train(testind,wordsel(1:300)) ...
+%          bigram_train(testind,bigramsel(1:200)) ...
+%          smallLabelTest ]);
 toc
 size(X)
 
 % w = (Ztrain'*Ztrain + 1*eye(size(Ztrain,2))) \ Ztrain'*Y;
 tic
 % Next up: Lambda of 0.0001!!
-[w, Fitinfo] = lasso(X,Y,'Lambda',0.001,'Alpha',0.4);
+[w, Fitinfo] = lasso(X,Y,'Lambda',0.01,'Alpha',0.4);
 toc
 b = Fitinfo.Intercept(1);
 Yhat = (Xtest*w + b);
-disp(norm(Ytest-Yhat)/sqrt(length(Ytest)))
+% disp(norm(Ytest-Yhat)/sqrt(length(Ytest)))
 %%
 plot(Ytest,Yhat,'r.');
 hold on;
@@ -159,15 +163,40 @@ plot(1:size(w,1),w,'b-','LineWidth',3)
 
 
 %%
+tic
+
+npcs=500;
+interinds = 1:20;
+interterms = [ (interinds)' (interinds)'; nchoosek(interinds,2) ];
+
+Ztest = [word_test bigram_test]*V(:,1:npcs);
+Zintertest = Ztest(:,interterms(:,1)) .* Ztest(:,interterms(:,2));
+
+smallLabelTest = svmclassify(smallSvm,Ztest);
+smallLabelTest = 2*(smallLabelTest-1.5);
+
+sigma = 8;
+rbf_test = zeros(size(Ztest,1),size(clusterMeans,1)+1);
+for i = 1:K
+    rbf_test(:,i) = exp(-sum((repmat(clusterMeans(i,1:500),size(Ztest,1),1)-Ztest).^2,2)/(2*sigma^2));
+end
+
+Xtest = full([...
+         city_test ...
+         Ztest ...
+         Zintertest ...
+         rbf_test ...
+         word_test(:,wordsel(1:300)) ...
+         bigram_test(:,bigramsel(1:200)) ...
+         smallLabelTest ]);
+toc
+
+Yhat = (Xtest*w + b);
+
+dlmwrite('submit.txt',Yhat,'precision','%d');
 
 
-
-
-
-
-
-
-
+%% Unsupervised Neural Net (I know...)
 
 
 

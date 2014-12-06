@@ -38,3 +38,26 @@ for i = startdim:enddim
     plot(3*i+zeros(sum(Y_train < miny),1)+2,Z((Y_train < miny),i),'b.');
 end
 
+%%
+clusterIds = labels;
+plotpc = [ 7 8 9 ];
+nlabels = 4;
+cc = hsv(nlabels);
+for i = [ 1:4 ]
+    fprintf('Cluster %d, with %d members, mean: %f, range %f\n',...
+        i,sum(clusterIds==i),...
+        mean(Yall(clusterIds==i)),...
+        range(Yall(clusterIds==i)))
+    scatter3(Z(clusterIds==i,plotpc(1)),...
+          Z(clusterIds==i,plotpc(2)),...
+          Z(clusterIds==i,plotpc(3)),...
+          (Yall(clusterIds==i)).^11/10000000000,...
+          100*(clusterIds(clusterIds==i)),...
+          '.');
+%     plot3(Z(clusterIds==i,plotpc(1)),Z(clusterIds==i,plotpc(2)),Z(clusterIds==i,plotpc(3)),'.','color',cc(i,:));
+    hold on
+end
+colormap;
+clear clusterIds;
+
+

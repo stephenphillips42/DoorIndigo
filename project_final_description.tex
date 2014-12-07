@@ -32,7 +32,8 @@ See KmeansSubmission.m
 \subsubsection*{Discriminative Method}
 Once again we get the first 500 Principal components. Then we train an SVM to spit the data in half, the ones with Y above the mean and the
 others with Y below the mean. We use MATLAB's built in svm classifier to do this. Then we train regressions (LASSO) on each half of that training data.
-Then we use the SVM to predict which half each point of the testing data should be on and predict with the appropriate weights. 
+Then we use the SVM to predict which half each point of the testing data should be on and predict with the appropriate weights. The SVM ended up being
+to large to fit in memory and too slow to train, so we could not use this method though it improved performance a bit.
 
 To run the code, simply specify what the Y\_test should be and it will output the error. (Commented in the code)
 

@@ -15,6 +15,8 @@ Then we run MATLAB's built in LASSO ($L_1$ regularization of linear regression) 
 
 To run the code, simply specify what the Y\_test should be and it will output the error. (Commented in the code)
 
+See PCRsubmission.m
+
 \section{K-Means as centers of Radial Basis Functions}
 \subsubsection*{Generative Method}
 We again use pricipal components, so first get the first 500 Principal components same as above, only with less pricipal components.
@@ -24,6 +26,8 @@ soften it for the regression. We again use LASSO on the PCA and k-means features
 
 To run the code, simply specify what the Y\_test should be and it will output the error. (Commented in the code)
 
+See KmeansSubmission.m
+
 \section{SVM to separate data}
 \subsubsection*{Discriminative Method}
 Once again we get the first 500 Principal components. Then we train an SVM to spit the data in half, the ones with Y above the mean and the
@@ -32,8 +36,31 @@ Then we use the SVM to predict which half each point of the testing data should 
 
 To run the code, simply specify what the Y\_test should be and it will output the error. (Commented in the code)
 
+See SVMSubmission.m
+
 \section{Kernel Regression}
 \subsubsection*{Instance Based Method}
+We ran a kernel regression using a Gaussian kernel with a somewhat larger kernel width (15). We used code created by the open source KMBOX.
+ 
+ Note that storing the entire $\bf{K}$ in memory is not possible (biglab will kill the process). Thus, we used a handful of tricks to reduce memory usage. First, instead of training on the full data set, we trained on a large fraction (60\%) of the data (chosen randomly from the full data). Second, we rewrote the KMBox to be more memory efficient (we construct $\bf{K}$ in segments instead of trying to create the entire thing at once, and use benchmarking/create a lot of temp files).
+ 
+ Even with these tricks, the code still stalls out if you're not careful. We've found that running in debug mode (stepping through the code) increases your chance of success.
+ 
+ Kernel Regression does quite well, but it's too slow to include in the ensemble. We thus looked into creating a faster approximation of kernel regression that we could run quickly along with several other methods.
+ 
+ \section{Kernel with KMeans}
+\subsubsection*{Faster Kernel Regression through Clustering}
 
+We tried two attempts to combine our KMeans work in order to speed up Kernel Regression. The first attempt involved finding 2000 kMeans points. We then ran kernel regression using those 2000 points instead of using the full dataset. This worked reasonably well.
 
+We also tried divding the data into 10 clusters, then training 10 seperate kernel regressions. Unlabeled data would be put into the proper cluster, then classified accordingly. This was not as good as the previous method, but was still faster than the full kernel regression.
+ 
+ 
+\section{Ensemble}
+\subsection*{Ensemble}
+We created an ensemble of lasso (with no feature reduction), lasso (reduced to 1000 features), and the SVM method. We divided the data into training (85\% of the labeled data) and validation (15\% of the data). We ran each of the three methods on the training data, then combined the results along with the city location. We used lasso and the validation data to determine the weights. Despite spending so much time getting the kernels fast enough to include in the ensemble, they didn't appear to help the prediction very much, so we ended up not including them. So it goes.
+
+\section{Conclusion}
+Our ensemble method didn't seem to preform incredibly well on the testing data (in fact, it was worse than some of the individual methods). We probably overfit (it's possible that a different training/validation split would have been a better idea). 
+ 
 \end{document}

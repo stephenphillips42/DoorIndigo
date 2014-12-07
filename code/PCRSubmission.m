@@ -26,4 +26,6 @@ Ztest = [word_test bigram_test] * V;
 
 Yhat = Ztest*w + b;
 
+% Test Yhat error here
+
 

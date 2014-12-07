@@ -56,4 +56,4 @@ Xtest = [city_test Ztest rbf_test];
 
 Yhat = Xtest*w + b;
 
-
+% Test Yhat here

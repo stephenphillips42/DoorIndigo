@@ -4,6 +4,7 @@
 \usepackage{float}
 \usepackage{caption}
 \usepackage{subcaption}
+\usepackage{hyperref}
 
 %opening
 \title{Machine Learning Final Report}
@@ -105,6 +106,12 @@ Ensemble & 0.7545 \\ \hline
 
 \section{Conclusion}
 The best method we found was kernel regression using a gaussian kernel, which worked well but had issues with time and memory. Although we tried multiple fancy techniques with dimensionality reduction, a straight lasso regression with all of the data preformed very very well.
+
+\section*{References}
+\begin{itemize}
+ \item KMBOX for kernel regression \url{http://sourceforge.net/projects/kmbox/}
+ \item Glmnet for lasso regression \url{http://web.stanford.edu/~hastie/glmnet_matlab/}
+\end{itemize}
 
 
 \end{document}

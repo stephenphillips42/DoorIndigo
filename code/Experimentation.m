@@ -13,7 +13,7 @@ Y_train = price_train;
 X_test = [city_test word_test bigram_test];
 %Y_city = cell2mat(cellfun(@(x) find(x,1,'first'), num2cell(city_train,2),'UniformOutput',false));
 
-%initialize_additional_features;
+% initialize_additional_features;
 load('pcaV500.mat','VV');
 Z = [word_train bigram_train]*VV;
 Ztest = [word_test bigram_test]*VV;
@@ -164,49 +164,58 @@ plot(1:size(w,1),w,'b-','LineWidth',3)
 %%
 tic
 
-npcs=500;
-interinds = 1:20;
-interterms = [ (interinds)' (interinds)'; nchoosek(interinds,2) ];
+% interinds = 1:20;
+% interterms = [ (interinds)' (interinds)'; nchoosek(interinds,2) ];
 
-Ztest = [word_test bigram_test]*V(:,1:npcs);
-Zintertest = Ztest(:,interterms(:,1)) .* Ztest(:,interterms(:,2));
+Ztest = [word_test bigram_test]*V(:,:);
+% Zintertest = Ztest(:,interterms(:,1)) .* Ztest(:,interterms(:,2));
 
-smallLabelTest = svmclassify(smallSvm,Ztest);
-smallLabelTest = 2*(smallLabelTest-1.5);
+% smallLabelTest = svmclassify(smallSvm,Ztest);
+% smallLabelTest = 2*(smallLabelTest-1.5);
 
-sigma = 8;
+sigma = 10;
 rbf_test = zeros(size(Ztest,1),size(clusterMeans,1)+1);
 for i = 1:K
     rbf_test(:,i) = exp(-sum((repmat(clusterMeans(i,1:500),size(Ztest,1),1)-Ztest).^2,2)/(2*sigma^2));
 end
 
+% Xtest = full([...
+%          city_test ...
+%          Ztest ...
+%          Zintertest ...
+%          rbf_test ...
+%          word_test(:,wordsel(1:300)) ...
+%          bigram_test(:,bigramsel(1:200)) ...
+%          smallLabelTest ]);
 Xtest = full([...
          city_test ...
          Ztest ...
-         Zintertest ...
-         rbf_test ...
-         word_test(:,wordsel(1:300)) ...
-         bigram_test(:,bigramsel(1:200)) ...
-         smallLabelTest ]);
+         ]);
 toc
 
 Yhat = (Xtest*w + b);
 
-dlmwrite('submit.txt',Yhat,'precision','%d');
+norm(Yhat-price_test)/sqrt(length(price_test))
+plot(price_test,Yhat-price_test,'r.')
 
+%%
 
-%% Unsupervised Neural Net (I know...)
-clear;
-load ../data/city_train.mat
-load ../data/city_test.mat
-load ../data/word_train.mat
-load ../data/word_test.mat
-load ../data/bigram_train.mat
-load ../data/bigram_test.mat
-load ../data/price_train.mat
+interinds = [ 2:21 ];
+interterms = [ (interinds)' (interinds)'; nchoosek(interinds,2) ];
+Zinter = Z(:,interterms(:,1)) .* Z(:,interterms(:,2));
 
-% Principal components
-load('pcaV500','VV');
-Zall = [word_train bigram_train] * VV;
+[w, Fitinfo] = lasso([city_train Z Zinter word_train(:,wordsel(1:300)) bigram_train(:,bigramsel(1:200))],Y_train,'Lambda',0.005); %  Zinter word_train(:,wordsel(1:300)) bigram_train(:,bigramsel(1:200))
+[sortedw, indw] = sort(abs(w),'descend');
+
+Zinter_test = (Ztest(:,interterms(:,1)).*Ztest(:,interterms(:,2)));
+Xtest = [city_test Ztest Zinter_test word_test(:,wordsel(1:300)) bigram_test(:,bigramsel(1:200))]; %  Zinter_test word_test(:,wordsel(1:300)) bigram_test(:,bigramsel(1:200))
+Yhat= (Xtest*w) + Fitinfo.Intercept(1);
+
+norm(Yhat-price_test)/sqrt(length(price_test))
+plot(price_test,Yhat-price_test,'r.')
+title('Price vs error')
+xlabel('Price')
+ylabel('Error')
+
 
 
